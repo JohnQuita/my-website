@@ -745,7 +745,7 @@ function exportReport(type) {
         else if (type === 'LOGS') { 
             csv += "Date,User,Action,Item,Qty\n"; 
             logs.forEach(l => csv += `${l.date},${l.user},${l.action},${l.item},${l.qty}\n`); 
-        }
+        } 
         else if (type === 'EXPIRED') {
             csv += "Category,Item,Qty,Expiry Date,Status\n";
             const today = new Date();
