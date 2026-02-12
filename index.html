@@ -291,4 +291,475 @@ tr:hover td { background: #fcfcfc; }
                     <button class="btn" style="background:#e3f2fd; color:#1565c0; flex-direction:column; padding:30px; border:1px solid #bbdefb;" onclick="exportReport('LOW')">
                         <i class="material-icons" style="font-size:32px; margin-bottom:10px;">warning</i> Low Stock
                     </button>
-  
+                    <button class="btn" style="background:#e8f5e9; color:#2e7d32; flex-direction:column; padding:30px; border:1px solid #c8e6c9;" onclick="exportReport('NEEDS')">
+                        <i class="material-icons" style="font-size:32px; margin-bottom:10px;">shopping_cart</i> Purchase Plan
+                    </button>
+                    <button class="btn" style="background:#fff3e0; color:#ef6c00; flex-direction:column; padding:30px; border:1px solid #ffe0b2;" onclick="exportReport('LOGS')">
+                        <i class="material-icons" style="font-size:32px; margin-bottom:10px;">list_alt</i> Logs
+                    </button>
+                    <button class="btn" style="background:#ffebee; color:#c62828; flex-direction:column; padding:30px; border:1px solid #ffcdd2;" onclick="exportReport('EXPIRED')">
+                        <i class="material-icons" style="font-size:32px; margin-bottom:10px;">event_busy</i> Expired Items
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-history" class="view-section" style="display:none;">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>Audit Trail Log</h3>
+                    <button id="clear-logs-btn" class="btn btn-danger" style="font-size:12px; display:none;" onclick="clearLogs()">CLEAR HISTORY</button>
+                </div>
+                <div style="overflow-x:auto; margin-top:15px;">
+                    <table style="font-size:13px;">
+                        <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Item Details</th></tr></thead>
+                        <tbody id="log-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="drill-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 id="drill-title" style="margin-top:0; color:var(--primary); border-bottom:1px solid #eee; padding-bottom:15px;">Details</h3>
+        <div id="cat-filters" class="cat-filters"></div>
+        <div id="drill-list-container" class="drill-list" style="overflow-y:auto; flex:1; margin-bottom:15px;"></div>
+        <div class="pagination" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:15px;">
+             <button class="btn btn-primary" onclick="changeDrillPage(-1)"><</button>
+             <span id="drill-page-num" style="font-size:12px;">Page 1</span>
+             <button class="btn btn-primary" onclick="changeDrillPage(1)">></button>
+        </div>
+        <button class="btn" style="width:100%; margin-top:15px; background:#ddd; color:#444;" onclick="document.getElementById('drill-modal').style.display='none'">Close</button>
+    </div>
+</div>
+
+<script>
+/* --- CONFIG & DATA --- */
+const accounts = {
+    "quita": { pass: "Quita246", role: "Admin", name: "Quita", pic: "admin.png" },
+    "omlang": { pass: "Omlang246", role: "Manager", name: "Omlang", pic: "manager.png" },
+    "briones": { pass: "Briones246", role: "Chef", name: "Briones", pic: "chef.png" },
+    "decastro": { pass: "Staff246", role: "Staff", name: "Decastro", pic: "decastro.png" },
+    "ewayan": { pass: "Staff246", role: "Staff", name: "Ewayan", pic: "ewayan.png" },
+    "tan": { pass: "Staff246", role: "Staff", name: "Tan", pic: "tan.png" }
+};
+
+// Error handling for Storage
+let db, logs, categories, units, menuBestSellers;
+try {
+    db = JSON.parse(localStorage.getItem("db_inventory")) || {};
+    logs = JSON.parse(localStorage.getItem("db_logs")) || [];
+    categories = JSON.parse(localStorage.getItem("db_cats")) || ["Ingredients", "Machines", "Packaging", "Utensils"];
+    units = JSON.parse(localStorage.getItem("db_units")) || ["kg", "pcs", "packs", "liters", "cans"];
+    menuBestSellers = localStorage.getItem("db_menu_best") || "1. Caramel Macchiato\n2. Croissant\n3. Iced Americano";
+} catch(e) {
+    showToast("Storage Error: Data reset.", "error");
+    db={}; logs=[]; categories=["Ingredients"]; units=["pcs"];
+}
+
+let currentUser = null;
+let currentPage = 1;
+const itemsPerPage = 8;
+let sessionTimer;
+let timeLeft = 300; // 5 mins
+
+// Drill Down State
+let drillAllItems = [];
+let currentDrillCat = "All";
+let drillPage = 1;
+const drillPerPage = 6;
+
+/* --- INIT --- */
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+        document.getElementById("splash").style.display = "none";
+        document.getElementById("login").style.display = "flex";
+    }, 2000); 
+    populateSelects();
+    toggleDateInput();
+});
+
+/* --- UTILS --- */
+function showToast(msg, type='info') {
+    const t = document.getElementById("toast");
+    t.innerText = msg;
+    t.className = type === 'error' ? 'show error' : 'show';
+    setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+}
+
+function populateSelects() {
+    const catSel = document.getElementById("inv-cat");
+    const unitSel = document.getElementById("inv-unit");
+    catSel.innerHTML = categories.map(c => `<option>${c}</option>`).join('');
+    unitSel.innerHTML = units.map(u => `<option>${u}</option>`).join('');
+}
+
+/* --- AUTH & SESSION --- */
+function authenticate() {
+    try {
+        const role = document.getElementById("role-select").value;
+        const u = document.getElementById("user-input").value.trim().toLowerCase();
+        const p = document.getElementById("pass-input").value;
+
+        if (accounts[u] && accounts[u].pass === p && accounts[u].role === role) {
+            currentUser = accounts[u];
+            document.getElementById("login").style.display = "none";
+            document.getElementById("main-app").style.display = "flex"; 
+            
+            document.getElementById("prof-name").innerText = currentUser.name;
+            document.getElementById("prof-role").innerText = currentUser.role;
+            document.getElementById("prof-pic").src = currentUser.pic;
+            
+            if(currentUser.role === 'Admin' || currentUser.role === 'Manager') {
+                document.getElementById("edit-menu-btn").style.display = "inline-block";
+            }
+            if(currentUser.role === 'Admin') document.getElementById("clear-logs-btn").style.display = "block";
+            
+            startSession();
+            nav('dashboard');
+        } else {
+            showToast("Invalid Login Details", "error");
+        }
+    } catch(e) { showToast("Login Error", "error"); }
+}
+
+function logout() { location.reload(); }
+
+function startSession() {
+    clearInterval(sessionTimer);
+    timeLeft = 300; 
+    const timerDisplay = document.getElementById("timer");
+    sessionTimer = setInterval(() => {
+        timeLeft--;
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        timerDisplay.innerText = `${m}:${s < 10 ? '0'+s : s}`;
+        if(timeLeft <= 0) logout();
+    }, 1000);
+}
+
+// RESET TIMER ON ACTIVITY
+function resetTimer() { timeLeft = 300; }
+
+/* --- NAVIGATION --- */
+function nav(viewId) {
+    try {
+        document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById(`view-${viewId}`).style.display = 'block';
+        
+        const titles = {
+            'dashboard': 'DEJA BREW - DASHBOARD',
+            'inventory': 'DEJA BREW - INVENTORY',
+            'reports': 'DEJA BREW - REPORTS',
+            'history': 'DEJA BREW - LOGS'
+        };
+        document.getElementById("page-title").innerText = titles[viewId] || "DEJA BREW";
+
+        const navItems = document.querySelectorAll('.nav-item');
+        if(viewId === 'dashboard') { navItems[0].classList.add('active'); renderDashboard(); }
+        if(viewId === 'inventory') { navItems[1].classList.add('active'); renderInventory(); }
+        if(viewId === 'reports') navItems[2].classList.add('active');
+        if(viewId === 'history') { navItems[3].classList.add('active'); renderLogs(); }
+
+        if(window.innerWidth < 900) toggleSidebar();
+    } catch(e) { console.error("Nav error", e); }
+}
+
+function toggleSidebar() { document.getElementById("sidebar").classList.toggle("active"); }
+
+/* --- INVENTORY LOGIC --- */
+function manageCustom(type, action) {
+    try {
+        if(action === 'add') {
+            const val = prompt(`Enter new ${type}:`);
+            if(val && val.trim() !== "") {
+                if(type === 'category') { 
+                    if(!categories.includes(val)) categories.push(val); 
+                    localStorage.setItem("db_cats", JSON.stringify(categories)); 
+                }
+                if(type === 'unit') { 
+                    if(!units.includes(val)) units.push(val); 
+                    localStorage.setItem("db_units", JSON.stringify(units)); 
+                }
+                populateSelects();
+                showToast(`${type} added`);
+            }
+        } else if (action === 'remove') {
+            const current = document.getElementById(type === 'category' ? "inv-cat" : "inv-unit").value;
+            if(confirm(`Are you sure you want to delete the ${type} "${current}"?`)) {
+                if(type === 'category') {
+                    categories = categories.filter(c => c !== current);
+                    if(categories.length === 0) categories.push("General");
+                    localStorage.setItem("db_cats", JSON.stringify(categories));
+                }
+                if(type === 'unit') {
+                    units = units.filter(u => u !== current);
+                    if(units.length === 0) units.push("pcs");
+                    localStorage.setItem("db_units", JSON.stringify(units));
+                }
+                populateSelects();
+                showToast(`${type} removed`);
+            }
+        }
+    } catch(e) { showToast("Error managing options", "error"); }
+}
+
+function toggleDateInput() {
+    const type = document.getElementById("stock-action-type").value;
+    document.getElementById("expiry-wrapper").style.display = (type === 'IN') ? 'block' : 'none';
+}
+
+function processStock() {
+    try {
+        const type = document.getElementById("stock-action-type").value; 
+        const name = document.getElementById("inv-name").value.trim().toUpperCase();
+        const qtyVal = document.getElementById("inv-qty").value;
+        const qty = parseFloat(qtyVal);
+        const cat = document.getElementById("inv-cat").value;
+        const unit = document.getElementById("inv-unit").value;
+        const expiry = document.getElementById("inv-expiry").value;
+
+        if(!name) return showToast("Please enter an item name", "error");
+        if(isNaN(qty) || qty <= 0) return showToast("Invalid Quantity", "error");
+
+        if(!db[name]) {
+            db[name] = { qty: 0, cat: cat, unit: unit, expiry: '', lastUpdated: Date.now(), stockOutCount: 0 };
+        }
+
+        if(type === 'IN') {
+            db[name].qty += qty;
+            db[name].cat = cat; 
+            db[name].unit = unit;
+            if(expiry) db[name].expiry = expiry; 
+            db[name].lastUpdated = Date.now();
+        } else {
+            if(db[name].qty < qty) return showToast("Insufficient Stock!", "error");
+            db[name].qty -= qty;
+            db[name].stockOutCount += qty;
+        }
+
+        localStorage.setItem("db_inventory", JSON.stringify(db));
+        logTx(type, name, qty);
+        
+        document.getElementById("inv-name").value = "";
+        document.getElementById("inv-qty").value = "";
+        document.getElementById("inv-expiry").value = "";
+        renderInventory();
+        showToast("Transaction Successful!", "success");
+    } catch(e) { showToast("Transaction Failed", "error"); console.error(e); }
+}
+
+function deleteItem(name) {
+    if(confirm("Delete item permanently?")) {
+        delete db[name];
+        localStorage.setItem("db_inventory", JSON.stringify(db));
+        renderInventory();
+    }
+}
+
+/* --- RENDER INVENTORY --- */
+function renderInventory() {
+    const tbody = document.getElementById("inventory-table-body");
+    tbody.innerHTML = "";
+    const search = document.getElementById("search-bar").value.toLowerCase();
+
+    let list = Object.entries(db).map(([k, v]) => ({name: k, ...v}));
+    list.sort((a,b) => b.lastUpdated - a.lastUpdated); 
+    list = list.filter(item => item.name.toLowerCase().includes(search) || item.cat.toLowerCase().includes(search));
+
+    const totalPages = Math.ceil(list.length / itemsPerPage) || 1;
+    if(currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage - 1) * itemsPerPage;
+    const pageItems = list.slice(start, start + itemsPerPage);
+
+    document.getElementById("page-num").innerText = `Page ${currentPage} of ${totalPages}`;
+
+    pageItems.forEach(item => {
+        let expInfo = item.expiry ? `<span style="color:${new Date(item.expiry) < new Date() ? 'red' : '#333'}; font-weight:bold;">${item.expiry}</span>` : '<span style="color:#aaa;">-</span>';
+        tbody.innerHTML += `
+        <tr>
+            <td><b>${item.name}</b></td>
+            <td><span style="background:#f0f0f0; padding:4px 10px; border-radius:12px; font-size:11px;">${item.cat}</span></td>
+            <td style="color:${item.qty<=5?'var(--danger)':'inherit'}; font-weight:bold;">${item.qty} ${item.unit}</td>
+            <td>${expInfo}</td>
+            <td>${currentUser.role === 'Admin' ? `<button onclick="deleteItem('${item.name}')" style="background:none; border:none; color:#888; cursor:pointer;"><i class="material-icons">delete</i></button>` : ''}</td>
+        </tr>`;
+    });
+}
+function changePage(dir) {
+    if(dir === 1) currentPage++;
+    else if (currentPage > 1) currentPage--;
+    renderInventory();
+}
+
+/* --- DASHBOARD --- */
+function renderDashboard() {
+    let totalItems = 0, lowStock = 0, expiring = 0;
+    let trendArr = [];
+    let catCounts = {}; 
+    const today = new Date();
+
+    Object.entries(db).forEach(([name, item]) => {
+        totalItems++;
+        if(item.qty <= 5) lowStock++;
+        if(item.expiry) {
+            const diff = (new Date(item.expiry) - today) / (1000*60*60*24);
+            if(diff <= 7 && diff >= -30) expiring++; // Upcoming or recently expired
+        }
+        if(item.stockOutCount > 0) trendArr.push({name: name, count: item.stockOutCount});
+        
+        if(!catCounts[item.cat]) catCounts[item.cat] = 0;
+        catCounts[item.cat] += item.qty;
+    });
+
+    document.getElementById("d-total").innerText = totalItems;
+    document.getElementById("d-low").innerText = lowStock;
+    document.getElementById("d-expire").innerText = expiring;
+
+    trendArr.sort((a,b) => b.count - a.count);
+    const trendList = document.getElementById("trend-list");
+    trendList.innerHTML = "";
+    if(trendArr.length === 0) trendList.innerHTML = "<small>No data yet.</small>";
+    
+    trendArr.slice(0, 5).forEach((t, i) => {
+        trendList.innerHTML += `<div class="list-item"><span><span class="rank-badge">${i+1}</span> ${t.name}</span> <b>${t.count} used</b></div>`;
+    });
+
+    document.getElementById("menu-best-list").innerText = menuBestSellers;
+    renderGraph(catCounts);
+}
+
+function renderGraph(data) {
+    const container = document.getElementById("bar-graph");
+    container.innerHTML = "";
+    const keys = Object.keys(data);
+    if(keys.length === 0) { container.innerHTML = "<small>No data.</small>"; return; }
+    const maxVal = Math.max(...Object.values(data));
+
+    keys.forEach(cat => {
+        const val = data[cat];
+        const height = maxVal > 0 ? (val / maxVal) * 100 : 0;
+        const finalHeight = height < 15 ? 15 : height; 
+        container.innerHTML += `
+        <div class="bar-group">
+             <div style="font-size:10px; font-weight:bold; margin-bottom:5px;">${val}</div>
+             <div class="bar" style="height:${finalHeight}px;" title="${cat}: ${val}"></div>
+             <div style="font-size:10px; color:#666; margin-top:5px;">${cat.substring(0,6)}..</div>
+        </div>`;
+    });
+}
+
+function editBestSellers() {
+    const input = prompt("Enter Menu Highlights:", menuBestSellers);
+    if(input !== null) {
+        menuBestSellers = input;
+        localStorage.setItem("db_menu_best", menuBestSellers);
+        renderDashboard();
+    }
+}
+
+/* --- DRILL DOWN --- */
+function openDrillDown(type) {
+    const today = new Date();
+    drillAllItems = []; 
+    drillPage = 1;
+    currentDrillCat = "All";
+    document.getElementById("drill-modal").style.display = "flex";
+    
+    let title = "";
+    Object.entries(db).forEach(([name, item]) => {
+        let include = false;
+        let extraInfo = `${item.qty} ${item.unit}`;
+        if(type === 'TOTAL') { title = "Total Inventory"; include = true; }
+        else if (type === 'LOW') { 
+            title = "Low Stock Alerts"; 
+            if(item.qty <= 5) { include = true; extraInfo = `<span style="color:red; font-weight:bold;">${item.qty} ${item.unit}</span>`; }
+        }
+        else if (type === 'EXPIRE') {
+            title = "Expiring / Expired";
+            if(item.expiry) {
+                const diff = (new Date(item.expiry) - today) / (1000*60*60*24);
+                if(diff <= 7) { include = true; extraInfo = `Exp: ${item.expiry}`; }
+            }
+        }
+        if(include) drillAllItems.push({ name: name, cat: item.cat, info: extraInfo });
+    });
+    document.getElementById("drill-title").innerText = title;
+    renderCategoryFilters();
+    renderDrillDownList();
+}
+function renderCategoryFilters() {
+    const filterContainer = document.getElementById("cat-filters");
+    let availableCats = ["All", ...categories];
+    filterContainer.innerHTML = availableCats.map(cat => `<div class="cat-chip ${cat === currentDrillCat ? 'active' : ''}" onclick="filterDrillCat('${cat}')">${cat}</div>`).join('');
+}
+function filterDrillCat(cat) { currentDrillCat = cat; drillPage = 1; renderCategoryFilters(); renderDrillDownList(); }
+function renderDrillDownList() {
+    const container = document.getElementById("drill-list-container");
+    container.innerHTML = "";
+    let filtered = (currentDrillCat === "All") ? drillAllItems : drillAllItems.filter(i => i.cat === currentDrillCat);
+    filtered.sort((a,b) => a.name.localeCompare(b.name));
+    if(filtered.length === 0) { container.innerHTML = `<div style="padding:20px; text-align:center; color:#999;">No items found.</div>`; document.getElementById("drill-page-num").innerText = "-"; return; }
+    const totalPages = Math.ceil(filtered.length / drillPerPage) || 1;
+    if(drillPage > totalPages) drillPage = totalPages;
+    const start = (drillPage - 1) * drillPerPage;
+    const itemsToShow = filtered.slice(start, start + drillPerPage);
+    document.getElementById("drill-page-num").innerText = `Page ${drillPage}/${totalPages}`;
+    itemsToShow.forEach(item => {
+        container.innerHTML += `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f0f0f0; font-size:14px;"><span><b>${item.name}</b> <span style="color:#999; font-size:12px;">(${item.cat})</span></span><span>${item.info}</span></div>`;
+    });
+}
+function changeDrillPage(dir) {
+    let filteredLen = (currentDrillCat === "All") ? drillAllItems.length : drillAllItems.filter(i => i.cat === currentDrillCat).length;
+    const totalPages = Math.ceil(filteredLen / drillPerPage) || 1;
+    if(dir === 1 && drillPage < totalPages) drillPage++;
+    else if (dir === -1 && drillPage > 1) drillPage--;
+    renderDrillDownList();
+}
+
+/* --- LOGS & REPORTS --- */
+function logTx(action, item, qty) {
+   logs.unshift({ date: new Date().toLocaleString(), user: currentUser.name, action: action, item: item, qty: qty });
+    if(logs.length > 150) logs.pop();
+    localStorage.setItem("db_logs", JSON.stringify(logs));
+}
+function renderLogs() {
+    document.getElementById("log-table-body").innerHTML = logs.map(l => `<tr><td>${l.date}</td><td>${l.user}</td><td style="color:${l.action==='IN'?'green':'red'}">${l.action}</td><td>${l.item} (${l.qty})</td></tr>`).join('');
+}
+function clearLogs() { if(confirm("Clear Audit Trail?")) { logs = []; localStorage.setItem("db_logs", JSON.stringify(logs)); renderLogs(); } }
+
+function exportReport(type) {
+    try {
+        let csv = "data:text/csv;charset=utf-8,";
+        if(type === 'LOW') { 
+            csv += "Category,Item,Qty,Unit\n"; 
+            Object.entries(db).forEach(([k,v]) => { if(v.qty<=5) csv += `${v.cat},${k},${v.qty},${v.unit}\n`; }); 
+        }
+        else if (type === 'NEEDS') { 
+            csv += "Item,Sold,Estimated Need\n"; 
+            Object.entries(db).forEach(([k,v]) => { csv += `${k},${v.stockOutCount},${v.stockOutCount}\n`; }); 
+        }
+        else if (type === 'LOGS') { 
+            csv += "Date,User,Action,Item,Qty\n"; 
+            logs.forEach(l => csv += `${l.date},${l.user},${l.action},${l.item},${l.qty}\n`); 
+        }
+        else if (type === 'EXPIRED') {
+            csv += "Category,Item,Qty,Expiry Date,Status\n";
+            const today = new Date();
+            Object.entries(db).forEach(([k,v]) => {
+                if(v.expiry) {
+                    const expDate = new Date(v.expiry);
+                    if(expDate < today) csv += `${v.cat},${k},${v.qty},${v.expiry},EXPIRED\n`;
+                }
+            });
+        }
+        const link = document.createElement("a"); link.href = encodeURI(csv); link.download = `report_${type.toLowerCase()}.csv`; link.click();
+        showToast("Report Downloaded", "success");
+    } catch(e) { showToast("Export Failed", "error"); }
+}
+</script>
+</body>
+</html>
