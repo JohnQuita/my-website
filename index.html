@@ -3,20 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title>Deja Brew Inventory Management</title>
-    <head>
-    <title>Deja Brew Inventory Management</title>
+    <meta name="description" content="Official Inventory System for Deja Brew Coffee Shop Philippines.">
+    <meta name="author" content="Quita">
+
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <script>
-        const firebaseConfig = { ... }; // Ilagay dito yung config mo
+        // Official Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCvCu1Y_9lCvNIfIVFMUIonCjA3fNwgy9I",
+            authDomain: "deja-brew-inventory.firebaseapp.com",
+            projectId: "deja-brew-inventory",
+            storageBucket: "deja-brew-inventory.firebasestorage.app",
+            messagingSenderId: "12909533449",
+            appId: "1:12909533449:web:22bb59e943e46f31181bd8",
+            measurementId: "G-G09MS3LYS4"
+        };
         firebase.initializeApp(firebaseConfig);
         const fdb = firebase.firestore();
     </script>
-</head>
-    <meta name="description" content="Official Inventory System for Deja Brew Coffee Shop Philippines.">
-    <meta name="author" content="Quita">
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -24,12 +31,12 @@
 <style>
 /* ===== 1. GLOBAL AESTHETICS (RESTORED) ===== */
 :root {
-    --primary: #2b1d1a;      /* Deep Espresso */
+    --primary: #2b1d1a;      
     --primary-light: #4e3631; 
-    --secondary: #a17a69;    /* Latte */
-    --accent: #d4a373;       /* Gold/Caramel */
-    --highlight: #ffd54f;    /* Bright Yellow for Login Accent */
-    --graph-color: #1976d2;  /* Changed to Professional Blue */
+    --secondary: #a17a69;    
+    --accent: #d4a373;       
+    --highlight: #ffd54f;    
+    --graph-color: #1976d2;  
     --bg: #f4f7f6;           
     --card-bg: #ffffff;
     --text: #333;
@@ -39,7 +46,6 @@
     --warning: #fbc02d;
 }
 
-/* Dark Theme Variables (Toggleable) */
 [data-theme="dark"] {
     --primary: #1e1e1e;
     --primary-light: #2d2d2d;
@@ -76,19 +82,9 @@ input, select { border: 1px solid #ddd; padding: 12px; border-radius: 6px; outli
 input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(161, 122, 105, 0.1); }
 
 /* --- LOGIN SCREEN --- */
-#login { 
-    display: none; 
-    min-height: 100vh; 
-    background: #121212; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-}
+#login { display: none; min-height: 100vh; background: #121212; display: flex; align-items: center; justify-content: center; padding: 0; }
 .login-container { display: flex; width: 100%; max-width: 1200px; height: 100vh; box-shadow: 0 0 50px rgba(0,0,0,0.5); overflow: hidden; }
-.login-left {
-    flex: 1; background: linear-gradient(135deg, #1a100e 0%, #2b1d1a 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 40px; text-align: center;
-}
+.login-left { flex: 1; background: linear-gradient(135deg, #1a100e 0%, #2b1d1a 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 40px; text-align: center; }
 .login-mascot { width: 250px; height: 250px; object-fit: cover; border-radius: 50%; border: 6px solid var(--highlight); box-shadow: 0 0 30px rgba(255, 213, 79, 0.2); margin-bottom: 20px; animation: float 4s ease-in-out infinite; }
 .login-left h1 { color: white; font-size: 48px; margin: 0; font-weight: 800; letter-spacing: -2px; }
 .login-left p { color: var(--accent); letter-spacing: 4px; font-weight: bold; margin-top: 10px; text-transform: uppercase; }
@@ -162,7 +158,7 @@ input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 3p
 .modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border-top: 5px solid var(--primary); color: var(--text); }
 .modal-title { margin: 0 0 20px 0; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 15px; }
 
-/* Custom Form Styles for Modals */
+/* Form Group */
 .form-group { margin-bottom: 15px; }
 .form-group label { display: block; font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px; }
 .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; background: var(--card-bg); color: var(--text); }
@@ -185,7 +181,6 @@ input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 3p
 .bar { transition: height 1s ease-out, transform 0.2s, filter 0.2s; position: relative; }
 .bar:hover { filter: brightness(1.15); transform: translateY(-3px); }
 
-/* Mobile Responsive Table CSS Added Here */
 .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; }
 table { width: 100%; min-width: 800px; border-collapse: separate; border-spacing: 0; }
 th { background: #f8f8f8; color: #666; padding: 15px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #ddd; white-space: nowrap; }
@@ -195,7 +190,6 @@ td { padding: 15px; border-bottom: 1px solid #eee; font-size: 13px; color: #444;
 .cat-chip { padding: 8px 16px; background: #f4f4f4; border-radius: 30px; font-size: 12px; cursor: pointer; color: #666; transition: 0.2s; white-space: nowrap; }
 .cat-chip.active { background: var(--primary); color: var(--accent); }
 
-/* Form Grid for Inventory */
 .inv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
 
 /* PRINT STYLES */
@@ -320,7 +314,7 @@ td { padding: 15px; border-bottom: 1px solid #eee; font-size: 13px; color: #444;
     </div>
 
     <div class="content-area">
-        <<div id="view-dashboard" class="view-section">
+        <div id="view-dashboard" class="view-section">
             <div class="stats-grid">
                 <div class="stat-box" style="border-bottom: 4px solid var(--secondary);" onclick="openDrillDown('TOTAL')">
                     <h2 id="d-total">0</h2><span>Total Items</span>
@@ -577,16 +571,14 @@ td { padding: 15px; border-bottom: 1px solid #eee; font-size: 13px; color: #444;
             </div>
         </div>
         <div style="margin-bottom:20px;">
-            <h4>Data Backup & Recovery</h4>
-            <p style="font-size:12px; color:#666; margin-bottom:10px;">Download your entire database or restore from a file.</p>
+            <h4>Data Backup</h4>
+            <p style="font-size:12px; color:#666; margin-bottom:10px;">Download your entire database as a local copy.</p>
             <button class="btn btn-success" style="width:100%; margin-bottom:10px;" onclick="backupData()">Download Backup (.json)</button>
-            <label class="btn btn-primary" style="width:100%; cursor:pointer;">
-                Restore from Backup <input type="file" id="restore-file" accept=".json" style="display:none;" onchange="restoreData(this)">
-            </label>
         </div>
         <button class="btn" style="width:100%; margin-top:10px; background:#ddd; color:#444;" onclick="document.getElementById('settings-modal').style.display='none'">Close</button>
     </div>
 </div>
+
 <div id="help-modal" class="modal-overlay">
     <div class="modal-content">
         <h3 class="modal-title">User Manual</h3>
@@ -602,26 +594,7 @@ td { padding: 15px; border-bottom: 1px solid #eee; font-size: 13px; color: #444;
 </div>
 
 <script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-<script>
-// 2. FIREBASE CONFIGURATION
-const firebaseConfig = {
-    apiKey: "AIzaSyCvCu1Y_9lCvNIfIVFMUIonCjA3fNwgy9I",
-    authDomain: "deja-brew-inventory.firebaseapp.com",
-    projectId: "deja-brew-inventory",
-    storageBucket: "deja-brew-inventory.firebasestorage.app",
-    messagingSenderId: "12909533449",
-    appId: "1:12909533449:web:22bb59e943e46f31181bd8",
-    measurementId: "G-G09MS3LYS4"
-};
-
-firebase.initializeApp(firebaseConfig);
-const fdb = firebase.firestore(); // Gumamit tayo ng 'fdb' variable para walang conflict sa code mo
-console.log("Deja Brew is now connected to Cloud!");
-
-/* --- CONFIG & DATA --- */
+// --- GLOBAL VARIABLES (Cleaned, NO LocalStorage) ---
 const baseAccounts = {
     "quita": { pass: "Quita246", role: "Admin", name: "Quita", pic: "admin.png", active: true },
     "omlang": { pass: "Omlang246", role: "Manager", name: "Omlang", pic: "manager.png", active: true },
@@ -631,59 +604,95 @@ const baseAccounts = {
     "tan": { pass: "Staff246", role: "Staff", name: "Tan", pic: "tan.png", active: true }
 };
 
-let db = {}, logs, categories, units, brands, menuBestSellers, customUsers, pendingTx;
+let db = {}, logs = [], categories = [], units = [], brands = [], menuBestSellers = "", customUsers = {}, pendingTx = [];
 const EXCLUDED_FROM_ALERTS = ["Machines", "Furniture"];
 const AUTH_CODE = "DEJA2026";
 
 /* --- INIT --- */
+function showLogin() {
+    document.getElementById("splash").style.display = "none";
+    document.getElementById("login").style.display = "flex";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-    loadData();
-    setTimeout(() => {
-        document.getElementById("splash").style.display = "none";
-        document.getElementById("login").style.display = "flex";
-    }, 2000); 
+    loadData(); // Initializes full Firebase sync
+    setTimeout(showLogin, 2000); 
     toggleDateInput();
 });
 
 function loadData() {
     try { 
-        // === REAL-TIME FIREBASE SYNC (Pinalitan nito ang LocalStorage) ===
+        // 1. INVENTORY SYNC
         fdb.collection("inventory").onSnapshot((snapshot) => {
-            db = {}; // Linisin ang local memory
-            snapshot.forEach((doc) => {
-                db[doc.id] = doc.data(); // Kunin ang data mula sa Cloud
-            });
+            db = {};
+            snapshot.forEach((doc) => { db[doc.id] = doc.data(); });
+            refreshView();
+        });
+
+        // 2. USERS SYNC
+        fdb.collection("users").onSnapshot((snapshot) => {
+            customUsers = {};
+            snapshot.forEach((doc) => { customUsers[doc.id] = doc.data(); });
             
-            // I-update agad ang screen kung naka-login na
-            if(document.getElementById("main-app").style.display !== "none") {
-                renderInventory();
-                if(document.getElementById("view-dashboard").style.display === "block") renderDashboard();
-                checkNotifications();
+            // Seed base accounts if database is empty
+            if(Object.keys(customUsers).length === 0) {
+                Object.entries(baseAccounts).forEach(([k, v]) => {
+                    fdb.collection("users").doc(k).set(v);
+                });
             }
-        }, (error) => {
-            console.error("Firebase sync error: ", error);
+            if(document.getElementById("view-users").style.display === "block") renderUsers();
         });
 
-        logs = JSON.parse(localStorage.getItem("db_logs")) || [];
-        pendingTx = JSON.parse(localStorage.getItem("db_pending")) || [];
-        let defaultCats = ["Ingredients", "Machines", "Furniture", "Packaging", "Utensils"];
-        categories = JSON.parse(localStorage.getItem("db_cats")) || defaultCats;
-        if(!categories.includes("Furniture")) { categories.push("Furniture"); }
-        
-        units = JSON.parse(localStorage.getItem("db_units")) || ["kg", "pcs", "packs", "liters", "cans"];
-        brands = JSON.parse(localStorage.getItem("db_brands")) || ["House Blend", "Nestle", "Local", "Breville", "Generic"];
-        menuBestSellers = localStorage.getItem("db_menu_best") || "1. Caramel Macchiato\n2. Croissant\n3. Iced Americano";
-        customUsers = JSON.parse(localStorage.getItem("db_users")) || {};
-        
-        Object.entries(baseAccounts).forEach(([k, v]) => {
-            if (!customUsers[k]) customUsers[k] = v;
+        // 3. LOGS SYNC
+        fdb.collection("logs").orderBy("timestamp", "desc").limit(150).onSnapshot((snapshot) => {
+            logs = [];
+            snapshot.forEach((doc) => { logs.push({ docId: doc.id, ...doc.data() }); });
+            if(document.getElementById("view-history").style.display === "block") renderLogs();
         });
 
-        populateSelects();
+        // 4. PENDING TRANSACTIONS SYNC
+        fdb.collection("pending").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+            pendingTx = [];
+            snapshot.forEach((doc) => { pendingTx.push({ docId: doc.id, ...doc.data() }); });
+            updateApprovalBadge();
+            if(document.getElementById("view-approvals").style.display === "block") renderApprovals();
+        });
+
+        // 5. SETTINGS SYNC (Categories, Units, Brands)
+        fdb.collection("settings").doc("general").onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                categories = data.categories || ["Ingredients"];
+                units = data.units || ["pcs"];
+                brands = data.brands || ["Generic"];
+                menuBestSellers = data.menuBestSellers || "Menu Info Setup Required";
+            } else {
+                categories = ["Ingredients", "Machines", "Furniture", "Packaging", "Utensils"];
+                units = ["kg", "pcs", "packs", "liters", "cans"];
+                brands = ["House Blend", "Nestle", "Local", "Breville", "Generic"];
+                menuBestSellers = "1. Caramel Macchiato\n2. Croissant\n3. Iced Americano";
+                saveSettingsToCloud(); // Save defaults to cloud
+            }
+            populateSelects();
+            refreshView();
+        });
+
     } catch(e) {
-        showToast("Storage Error: Data reset.", "error");
-        db={}; logs=[]; categories=["Ingredients"]; units=["pcs"]; brands=["Generic"]; customUsers={}; pendingTx=[];
+        showToast("Cloud Connection Error", "error");
+        console.error("Firebase Sync Error", e);
     }
+}
+
+function refreshView() {
+    if(document.getElementById("main-app").style.display !== "none") {
+        if(document.getElementById("view-inventory").style.display === "block") renderInventory();
+        if(document.getElementById("view-dashboard").style.display === "block") renderDashboard();
+        checkNotifications();
+    }
+}
+
+function saveSettingsToCloud() {
+    fdb.collection("settings").doc("general").set({ categories, units, brands, menuBestSellers }, { merge: true });
 }
 
 /* --- UTILS --- */
@@ -761,6 +770,7 @@ function resetTimer() { timeLeft = 300; }
 function forgotPass() {
     showToast("Please contact an Admin to reset your password.", "warning");
 }
+
 /* --- NAVIGATION --- */
 function nav(viewId) {
     try {
@@ -788,7 +798,6 @@ function nav(viewId) {
         if(window.innerWidth < 900) toggleSidebar();
     } catch(e) { console.error("Nav error", e); }
 }
-
 function toggleSidebar() { document.getElementById("sidebar").classList.toggle("active"); }
 
 /* --- INVENTORY LOGIC --- */
@@ -797,20 +806,12 @@ function manageCustom(type, action) {
         if(action === 'add') {
             const val = prompt(`Enter new ${type}:`);
             if(val && val.trim() !== "") {
-                if(type === 'category') { 
-                    if(!categories.includes(val)) categories.push(val); 
-                    localStorage.setItem("db_cats", JSON.stringify(categories)); 
-                }
-                if(type === 'unit') { 
-                    if(!units.includes(val)) units.push(val); 
-                    localStorage.setItem("db_units", JSON.stringify(units)); 
-                }
-                if(type === 'brand') {
-                    if(!brands.includes(val)) brands.push(val);
-                    localStorage.setItem("db_brands", JSON.stringify(brands));
-                }
-                populateSelects();
-                showToast(`${type} added`);
+                if(type === 'category' && !categories.includes(val)) categories.push(val);
+                if(type === 'unit' && !units.includes(val)) units.push(val);
+                if(type === 'brand' && !brands.includes(val)) brands.push(val);
+                
+                saveSettingsToCloud(); // Sync to cloud
+                showToast(`${type} added`, "success");
             }
         } else if (action === 'remove') {
             const selectId = type === 'category' ? "inv-cat" : (type === 'unit' ? "inv-unit" : "inv-brand");
@@ -819,20 +820,17 @@ function manageCustom(type, action) {
                 if(type === 'category') {
                     categories = categories.filter(c => c !== current);
                     if(categories.length === 0) categories.push("General");
-                    localStorage.setItem("db_cats", JSON.stringify(categories));
                 }
                 if(type === 'unit') {
                     units = units.filter(u => u !== current);
                     if(units.length === 0) units.push("pcs");
-                    localStorage.setItem("db_units", JSON.stringify(units));
                 }
                 if(type === 'brand') {
                     brands = brands.filter(b => b !== current);
                     if(brands.length === 0) brands.push("Generic");
-                    localStorage.setItem("db_brands", JSON.stringify(brands));
                 }
-                populateSelects();
-                showToast(`${type} removed`);
+                saveSettingsToCloud(); // Sync to cloud
+                showToast(`${type} removed`, "success");
             }
         }
     } catch(e) { showToast("Error", "error"); }
@@ -858,8 +856,7 @@ function processStock() {
         if(isNaN(qty) || qty <= 0) return showToast("Invalid Quantity", "error");
 
         if(currentUser.role !== 'Admin') {
-            pendingTx.push({
-                id: Date.now(),
+            const txData = {
                 user: currentUser.username,
                 role: currentUser.role,
                 type: type,
@@ -869,16 +866,21 @@ function processStock() {
                 brand: brand,
                 unit: unit,
                 expiry: expiry,
-                dateStr: new Date().toLocaleString()
-            });
-            localStorage.setItem("db_pending", JSON.stringify(pendingTx));
-            showToast("Transaction sent to Admin for approval", "info");
+                dateStr: new Date().toLocaleString(),
+                timestamp: Date.now()
+            };
             
-            document.getElementById("inv-name").value = "";
-            document.getElementById("inv-qty").value = "";
-            document.getElementById("inv-expiry").value = "";
+            // Sync Pending to Cloud
+            fdb.collection("pending").add(txData)
+                .then(() => {
+                    showToast("Transaction sent to Admin for approval", "info");
+                    document.getElementById("inv-name").value = "";
+                    document.getElementById("inv-qty").value = "";
+                    document.getElementById("inv-expiry").value = "";
+                });
             return;
         }
+
         const success = commitTransaction(type, name, qty, cat, brand, unit, expiry, currentUser.username);
         if(success) {
             document.getElementById("inv-name").value = "";
@@ -913,7 +915,6 @@ function commitTransaction(type, name, qty, cat, brand, unit, expiry, actingUser
         db[name].lastUpdated = Date.now();
     }
 
-    // === SAVE TO FIREBASE CLOUD ===
     fdb.collection("inventory").doc(name).set(db[name])
         .catch(e => console.error("Cloud Save Error:", e));
 
@@ -923,7 +924,6 @@ function commitTransaction(type, name, qty, cat, brand, unit, expiry, actingUser
 
 function deleteItem(name) {
     if(confirm("Delete item permanently from Cloud?")) {
-        // === DELETE FROM FIREBASE CLOUD ===
         fdb.collection("inventory").doc(name).delete()
             .then(() => showToast("Deleted from Cloud", "success"))
             .catch(e => showToast("Error deleting", "error"));
@@ -951,6 +951,7 @@ function renderApprovals() {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#888;">No pending requests.</td></tr>`;
         return;
     }
+
     pendingTx.forEach(tx => {
         let actionStyle = tx.type === 'IN' ? 'color:green; font-weight:bold;' : 'color:red; font-weight:bold;';
         tbody.innerHTML += `
@@ -961,37 +962,30 @@ function renderApprovals() {
             <td><b>${tx.name}</b> <br><span style="font-size:11px; color:#888;">${tx.brand} - ${tx.cat}</span></td>
             <td>${tx.qty} ${tx.unit} <br><span style="font-size:10px; color:red;">${tx.expiry ? 'Exp: '+tx.expiry : ''}</span></td>
             <td>
-                <button class="btn btn-small btn-success" onclick="approveTx(${tx.id})" title="Approve"><i class="material-icons" style="font-size:16px;">check</i></button>
-                <button class="btn btn-small btn-danger" onclick="rejectTx(${tx.id})" title="Reject"><i class="material-icons" style="font-size:16px;">close</i></button>
+                <button class="btn btn-small btn-success" onclick="approveTx('${tx.docId}')" title="Approve"><i class="material-icons" style="font-size:16px;">check</i></button>
+                <button class="btn btn-small btn-danger" onclick="rejectTx('${tx.docId}')" title="Reject"><i class="material-icons" style="font-size:16px;">close</i></button>
             </td>
         </tr>`;
     });
 }
-function approveTx(id) {
-    const index = pendingTx.findIndex(t => t.id === id);
-    if(index > -1) {
-        const tx = pendingTx[index];
+function approveTx(docId) {
+    const tx = pendingTx.find(t => t.docId === docId);
+    if(tx) {
         const success = commitTransaction(tx.type, tx.name, tx.qty, tx.cat, tx.brand, tx.unit, tx.expiry, tx.user);
         if(success) {
-            pendingTx.splice(index, 1);
-            localStorage.setItem("db_pending", JSON.stringify(pendingTx));
+            fdb.collection("pending").doc(docId).delete(); // Delete from cloud pending list
             showToast(`Approved ${tx.type} for ${tx.name}`, "success");
-            renderApprovals();
-            updateApprovalBadge();
         } else {
             showToast(`Approval Failed: Insufficient stock of ${tx.name}.`, "error");
         }
     }
 }
 
-function rejectTx(id) {
-    const index = pendingTx.findIndex(t => t.id === id);
-    if(index > -1) {
-        pendingTx.splice(index, 1);
-        localStorage.setItem("db_pending", JSON.stringify(pendingTx));
-        showToast("Transaction Rejected", "info");
-        renderApprovals();
-        updateApprovalBadge();
+function rejectTx(docId) {
+    if(confirm("Reject this transaction request?")) {
+        fdb.collection("pending").doc(docId).delete().then(() => {
+            showToast("Transaction Rejected", "info");
+        });
     }
 }
 
@@ -1087,6 +1081,7 @@ function renderGraph(data) {
     const keys = Object.keys(data);
     if(keys.length === 0) { container.innerHTML = "<small>No data.</small>"; return; }
     const maxVal = Math.max(...Object.values(data));
+
     keys.forEach(cat => {
         const val = data[cat];
         const height = maxVal > 0 ? (val / maxVal) * 100 : 0;
@@ -1103,8 +1098,7 @@ function editBestSellers() {
     const input = prompt("Enter Menu Highlights:", menuBestSellers);
     if(input !== null) {
         menuBestSellers = input;
-        localStorage.setItem("db_menu_best", menuBestSellers);
-        renderDashboard();
+        saveSettingsToCloud(); // Sync
     }
 }
 
@@ -1180,14 +1174,26 @@ function changeDrillPage(dir) {
 /* --- LOGS & REPORTS --- */
 function logTx(action, item, qty, customUser) {
     const actingUser = customUser || currentUser.username;
-    logs.unshift({ date: new Date().toLocaleString(), user: actingUser, action: action, item: item, qty: qty });
-    if(logs.length > 150) logs.pop();
-    localStorage.setItem("db_logs", JSON.stringify(logs));
+    fdb.collection("logs").add({ 
+        date: new Date().toLocaleString(), 
+        timestamp: Date.now(),
+        user: actingUser, 
+        action: action, 
+        item: item, 
+        qty: qty 
+    });
 }
 function renderLogs() {
     document.getElementById("log-table-body").innerHTML = logs.map(l => `<tr><td>${l.date}</td><td>${l.user}</td><td style="color:${l.action==='IN'?'green':'red'}">${l.action}</td><td>${l.item} (${l.qty})</td></tr>`).join('');
 }
-function clearLogs() { if(confirm("Clear Audit Trail?")) { logs = []; localStorage.setItem("db_logs", JSON.stringify(logs)); renderLogs(); } }
+function clearLogs() { 
+    if(confirm("Clear Audit Trail across all devices?")) { 
+        logs.forEach(l => {
+            if(l.docId) fdb.collection("logs").doc(l.docId).delete();
+        });
+        showToast("Logs Cleared from Cloud", "success");
+    } 
+}
 
 function exportReport(type) {
     try {
@@ -1246,23 +1252,29 @@ function renderUsers() {
             <td>${acc.active !== false ? '<span style="color:var(--success)">Active</span>' : '<span style="color:var(--danger)">Inactive</span>'}</td>
             <td>
                 <button class="btn btn-small btn-secondary" onclick="toggleUserStatus('${u}')">${acc.active !== false ? 'Deactivate' : 'Activate'}</button>
-                <button class="btn btn-small btn-danger" onclick="resetUserPass('${u}')">Reset</button>
+                <button class="btn btn-small btn-info" onclick="resetUserPass('${u}')">Reset Pass</button>
+                <button class="btn btn-small btn-danger" onclick="deleteUser('${u}')" title="Delete User"><i class="material-icons" style="font-size:14px;">delete_forever</i></button>
             </td>
         </tr>`;
     });
 }
 function toggleUserStatus(username) {
     if(username === currentUser.username) return showToast("Cannot deactivate yourself", "error");
-    customUsers[username].active = (customUsers[username].active === false) ? true : false;
-    localStorage.setItem("db_users", JSON.stringify(customUsers));
-    renderUsers();
+    fdb.collection("users").doc(username).update({ active: customUsers[username].active === false });
 }
 function resetUserPass(username) {
     const newPass = prompt("Enter new password for " + username);
     if(newPass) {
-        customUsers[username].pass = newPass;
-        localStorage.setItem("db_users", JSON.stringify(customUsers));
+        fdb.collection("users").doc(username).update({ pass: newPass });
         showToast("Password Reset Successful", "success");
+    }
+}
+function deleteUser(username) {
+    if(username === currentUser.username) return showToast("Cannot delete yourself", "error");
+    if(confirm(`Are you sure you want to PERMANENTLY delete the account of ${username}?`)) {
+        fdb.collection("users").doc(username).delete().then(() => {
+            showToast("User deleted permanently", "success");
+        });
     }
 }
 
@@ -1280,32 +1292,6 @@ function backupData() {
     a.href = url;
     a.download = "dejabrew_backup_" + new Date().toISOString().slice(0,10) + ".json";
     a.click();
-}
-
-function restoreData(input) {
-    const file = input.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            if(data.db && data.users) {
-                // I-restore din sa Cloud
-                Object.entries(data.db).forEach(([k,v]) => {
-                    fdb.collection("inventory").doc(k).set(v);
-                });
-                localStorage.setItem("db_inventory", JSON.stringify(data.db));
-                localStorage.setItem("db_logs", JSON.stringify(data.logs));
-                localStorage.setItem("db_users", JSON.stringify(data.users));
-                localStorage.setItem("db_cats", JSON.stringify(data.categories));
-                if(data.brands) localStorage.setItem("db_brands", JSON.stringify(data.brands));
-                if(data.pending) localStorage.setItem("db_pending", JSON.stringify(data.pending));
-                alert("System Restored. Reloading...");
-                location.reload();
-            } else { throw new Error("Invalid Format"); }
-        } catch(err) { showToast("Invalid Backup File", "error"); }
-    };
-    reader.readAsText(file);
 }
 
 function checkNotifications() {
@@ -1384,10 +1370,10 @@ function submitRegistration() {
     if(!u || !p || !n) return showToast("Please fill all fields", "error");
     if(customUsers[u]) return showToast("Username taken", "error");
     
-    customUsers[u] = { pass: p, role: r, name: n, bday: b, pic: tempRegImg || "logo.png", active: true };
-    localStorage.setItem("db_users", JSON.stringify(customUsers));
-    showToast("Registration Successful", "success");
-    document.getElementById("register-modal").style.display="none";
+    fdb.collection("users").doc(u).set({ pass: p, role: r, name: n, bday: b, pic: tempRegImg || "logo.png", active: true }).then(() => {
+        showToast("Registration Successful", "success");
+        document.getElementById("register-modal").style.display="none";
+    });
 }
 
 function saveProfileChanges() {
@@ -1396,18 +1382,15 @@ function saveProfileChanges() {
     const newPass = document.getElementById("edit-pass").value;
     const newPic = document.getElementById("edit-profile-img").src;
 
-    currentUser.name = newName;
-    currentUser.bday = newBday;
-    currentUser.pic = newPic;
-    if(newPass) currentUser.pass = newPass;
+    const updates = { name: newName, bday: newBday, pic: newPic };
+    if(newPass) updates.pass = newPass;
 
-    customUsers[currentUser.username] = { ...currentUser };
-    delete customUsers[currentUser.username].username; 
-    
-    localStorage.setItem("db_users", JSON.stringify(customUsers));
-    updateProfileUI();
-    document.getElementById("profile-modal").style.display = "none";
-    showToast("Profile Updated", "success");
+    fdb.collection("users").doc(currentUser.username).update(updates).then(() => {
+        currentUser = { ...currentUser, ...updates }; // update local session
+        updateProfileUI();
+        document.getElementById("profile-modal").style.display = "none";
+        showToast("Profile Updated", "success");
+    });
 }
 
 function updateProfileUI() {
